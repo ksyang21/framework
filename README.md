@@ -7,6 +7,7 @@ This is a minimal PHP framework that provides a basic understanding of the Model
 - [x] Route to call controller function
 - [ ] Middleware
 - [ ] Route with callback function
+- [ ] Shared data from middleware
 - [ ] More to be added...
 
 ## Features
