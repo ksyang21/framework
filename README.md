@@ -8,6 +8,8 @@ This is a minimal PHP framework that provides a basic understanding of the Model
 - [ ] Middleware
 - [ ] Route with callback function
 - [ ] Shared data from middleware
+- [ ] Sanitize inputs
+- [ ] Define fillables for data input
 - [ ] More to be added...
 
 ## Features
