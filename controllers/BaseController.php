@@ -17,13 +17,13 @@ abstract class BaseController
 		$response = [];
 		if (!empty($this->errors)) {
 			$response['status'] = self::$FAILED;
-			$response['data'] = $this->errors;
+			$response['data'] = array_unique($this->errors);
 			$this->errors       = [];
 		} else {
 			$response['status'] = self::$SUCCESS;
 			$response['data'] = $this->response;
 			$this->response = [];
 		}
-		echo Helper::JSON($response);
+		echo json_encode($response);
 	}
 }
