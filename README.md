@@ -5,9 +5,9 @@ This is a minimal PHP framework that provides a basic understanding of the Model
 ## WIP
 - [ ] Render view
 - [x] Route to call controller function
-- [ ] Middleware
+- [x] Middleware
 - [ ] Route with callback function
-- [ ] Shared data from middleware
+- [x] Shared data from middleware
 - [ ] Sanitize inputs
 - [ ] Define fillables for data input
 - [ ] More to be added...
