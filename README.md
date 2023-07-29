@@ -33,8 +33,8 @@ This is a minimal PHP framework that provides a basic understanding of the Model
 ### Installation
 
 1. Clone the repository: `git clone https://github.com/ksyang1121/framework.git`
-2. Change into the project directory: `cd framework`
-3. Start the built-in PHP development server: `php -S localhost:8000`
+2. You may need to set up Apache server and re-configure rewrite rules
+3. Start Apache server, go to `localhost/framework` to view the result.
 
 ### Configuration
 
