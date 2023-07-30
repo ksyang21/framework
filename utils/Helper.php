@@ -4,6 +4,6 @@ namespace utils;
 class Helper
 {
 	/**
-	 * List your helper function here
+	 * List your helper functions here
 	 */
 }

@@ -4,7 +4,5 @@ use controllers\TestController;
 use routes\Router;
 
 $router = new Router();
-$router->get('/test', [TestController::class, 'test']);
+$router->middleware(['user-access', 'admin-access'])->get('/test', [TestController::class, 'test']);
 $router->handleRequest();
-
-//->middleware(['user-access', 'admin-access'])

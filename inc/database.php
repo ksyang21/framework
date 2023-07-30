@@ -1,14 +1,12 @@
 <?php
-// SEO DB
-const SEO_HOST    = "localhost";
-const SEO_DB_USER = "root";
-const SEO_DB_PASS = "";
-const SEO_DB_NAME = "seo";
-const SEO_DB_PORT = 3306;
 
-// Company DB
-const COMP_HOST    = "localhost";
-const COMP_DB_USER = "root";
-const COMP_DB_PASS = "";
-const COMP_DB_NAME = "seo_company";
-const COMP_DB_PORT = 3306;
+use Database\Database;
+
+const HOST    = "127.0.0.1";
+const USER    = "kahsin";
+const PASS    = "kpb514PHB";
+const DB_NAME = "kahsin_portfolio";
+const PORT    = 3306;
+
+$mysqli = new mysqli(HOST, USER, PASS, DB_NAME, PORT);
+$sql_conn = new Database($mysqli);

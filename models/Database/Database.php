@@ -22,7 +22,7 @@ class Database
     public function execute($query): void
     {
         try {
-            $this->conn->query($query);
+            $this->conn->query($query) or die($query);
         } catch (Exception $e) {
             die();
         }
