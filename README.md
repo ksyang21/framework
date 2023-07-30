@@ -10,6 +10,7 @@ This is a minimal PHP framework that provides a basic understanding of the Model
 - [x] Shared data from middleware
 - [ ] Sanitize inputs
 - [ ] Define fillables for data input
+- [x] Table builder, to make sure database conformity
 - [ ] More to be added...
 
 ## Features
