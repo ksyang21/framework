@@ -19,6 +19,7 @@ abstract class BaseModel
     private array    $orders     = [];
     private array    $properties = [];
     private array    $limit      = [];
+    private array    $havings    = [];
 
     public function __construct(Database $conn)
     {
@@ -84,6 +85,12 @@ abstract class BaseModel
             $value = sprintf("'%s'", $value);
         }
         $this->where[] = sprintf('%s IN (%s)', $column, implode(',', $data));
+        return $this;
+    }
+
+    public function having(string $having_condition): BaseModel
+    {
+        $this->having($having_condition);
         return $this;
     }
 
@@ -163,18 +170,8 @@ abstract class BaseModel
         if (empty($this->where)) {
             return $this->all();
         } else {
-            $query       = sprintf(
-                'SELECT %s %s FROM %s WHERE %s %s ORDER BY %s %s',
-                !empty($this->select) ? implode(',', $this->select) : '*',
-                !empty($this->counts) ? sprintf(',%s', implode(',', $this->counts)) : '',
-                $this->table,
-                implode(' AND ', $this->where),
-                !empty($this->groups) ? sprintf(' GROUP BY %s', implode(',', $this->groups)) : '',
-                !empty($this->orders) ? sprintf(' %s', implode(',', $this->orders)) : $this->id,
-                !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
-            );
-            $this->query = $query;
-            $results     = $this->conn->select($query);
+            $this->buildQuery('select');
+            $results = $this->conn->select($this->query);
             $this->reset();
             return $results;
         }
@@ -182,17 +179,8 @@ abstract class BaseModel
 
     public function all(): array
     {
-        $query       = sprintf(
-            'SELECT %s %s FROM %s %s ORDER BY %s %s',
-            !empty($this->select) ? implode(',', $this->select) : '*',
-            !empty($this->counts) ? sprintf(',%s', implode(',', $this->counts)) : '',
-            $this->table,
-            !empty($this->groups) ? sprintf(' GROUP BY %s', implode(',', $this->groups)) : '',
-            !empty($this->orders) ? sprintf(' %s', implode(',', $this->orders)) : $this->id,
-            !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
-        );
-        $this->query = $query;
-        $results     = $this->conn->select($query);
+        $this->buildQuery('select');
+        $results = $this->conn->select($this->query);
         $this->reset();
         return $results;
     }
@@ -202,18 +190,8 @@ abstract class BaseModel
         if (empty($this->where)) {
             return $this->all()[0];
         } else {
-            $query       = sprintf(
-                'SELECT %s %s FROM %s WHERE %s %s ORDER BY %s %s',
-                !empty($this->select) ? implode(',', $this->select) : '*',
-                !empty($this->counts) ? sprintf(',%s', implode(',', $this->counts)) : '',
-                $this->table,
-                implode(' AND ', $this->where),
-                !empty($this->groups) ? sprintf(' GROUP BY %s', implode(',', $this->groups)) : '',
-                !empty($this->orders) ? sprintf(' %s', implode(',', $this->orders)) : $this->id,
-                !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
-            );
-            $this->query = $query;
-            $result      = $this->conn->single($query);
+            $this->buildQuery('select');
+            $result      = $this->conn->single($this->query);
             $this->reset();
             return $result;
         }
@@ -223,46 +201,19 @@ abstract class BaseModel
     {
         if ($this->primary_id > 0) {
             // Update data
-            $properties = [];
-            foreach ($this->properties as $column => $data) {
-                $properties[] = sprintf('%s = %s', $column, $data);
-            }
-            $query = sprintf(
-                'UPDATE %s SET %s WHERE %s = %s',
-                $this->table,
-                implode(',', $properties),
-                $this->id,
-                $this->primary_id
-            );
+            $this->buildQuery('update');
         } else {
             // Insert data
-            $columns = $values = [];
-            foreach ($this->properties as $column => $data) {
-                $columns[] = $column;
-                $values[]  = $data;
-            }
-            $query = sprintf(
-                'INSERT INTO %s(%s) VALUES(%s)',
-                $this->table,
-                implode(',', $columns),
-                implode(',', $values)
-            );
+            $this->buildQuery('insert');
         }
-        $this->query = $query;
-        $this->conn->execute($query);
+        $this->conn->execute($this->query);
         $this->reset();
     }
 
     public function delete(): void
     {
-        $query       = sprintf(
-            'DELETE FROM %s WHERE %s %s',
-            $this->table,
-            implode(',', $this->where),
-            !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
-        );
-        $this->query = $query;
-        $this->conn->execute($query);
+        $this->buildQuery('delete');
+        $this->conn->execute($this->query );
         $this->reset();
     }
 
@@ -273,5 +224,66 @@ abstract class BaseModel
     public function id(): int
     {
         return $this->conn()->getLastInsertId();
+    }
+
+    public function buildQuery(string $build_condition): void
+    {
+        switch ($build_condition) {
+            case 'select':
+                $this->query = sprintf(
+                    'SELECT %s %s FROM %s WHERE 1 %s %s %s ORDER BY %s %s',
+                    !empty($this->select) ? implode(',', $this->select) : '*',
+                    !empty($this->counts) ? sprintf(',%s', implode(',', $this->counts)) : '',
+                    $this->table,
+                    implode(' AND ', $this->where),
+                    !empty($this->groups) ? sprintf(' GROUP BY %s', implode(',', $this->groups)) : '',
+                    !empty($this->havings) ? sprintf('HAVING %s', implode(',', $this->havings)) : '',
+                    !empty($this->orders) ? sprintf(' %s', implode(',', $this->orders)) : $this->id,
+                    !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
+                );
+                break;
+
+            case 'insert' :
+                // Insert data
+                $columns = $values = [];
+                foreach ($this->properties as $column => $data) {
+                    $columns[] = $this->conn->conn()->real_escape_string($column);
+                    $values[]  = $this->conn->conn()->real_escape_string($data);
+                }
+                $this->query = sprintf(
+                    'INSERT INTO %s(%s) VALUES(%s)',
+                    $this->table,
+                    implode(',', $columns),
+                    implode(',', $values)
+                );
+                break;
+
+            case 'update' :
+                // Update data
+                $properties = [];
+                foreach ($this->properties as $column => $data) {
+                    $properties[] = sprintf('%s = %s', $column, $data);
+                }
+                $this->query = sprintf(
+                    'UPDATE %s SET %s WHERE %s = %s',
+                    $this->table,
+                    implode(',', $properties),
+                    $this->id,
+                    $this->primary_id
+                );
+                break;
+
+            case 'delete' :
+                $this->query = sprintf(
+                    'DELETE FROM %s WHERE %s %s',
+                    $this->table,
+                    implode(',', $this->where),
+                    !empty($this->limit) ? sprintf(' LIMIT %d OFFSET %d', $this->limit[0], $this->limit[1]) : ''
+                );
+                break;
+
+            default:
+                break;
+        }
     }
 }

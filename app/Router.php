@@ -1,8 +1,6 @@
 <?php
 
-namespace routes;
-
-use utils\Middleware;
+namespace app;
 
 class Router
 {
